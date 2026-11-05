@@ -1,5 +1,5 @@
 // Pozwala aplikacji działać bez internetu. Zmień numer wersji przy każdej aktualizacji plików.
-const CACHE = "iwonka-liczy-v1";
+const CACHE = "iwonka-liczy-v2";
 const APP = ["./", "index.html", "manifest.webmanifest", "zxing.min.js",
   "icon-192.png", "icon-512.png", "icon-maskable-512.png", "apple-touch-icon.png"];
 

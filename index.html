@@ -165,6 +165,17 @@ input[type=date]{width:100%;font:inherit;font-size:16px;color:var(--fg);backgrou
 .prow .pi{flex:1;min-width:0}.prow .ps{font-size:12px;color:var(--muted)}
 .prow .ed{color:var(--accent);font-weight:600;font-size:14px;padding:6px}
 .sec{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600;margin:6px 0 -4px}
+.addrow{display:flex;gap:4px;flex-wrap:wrap}
+.addrow .newprod{flex:1;min-width:150px}
+.ings{list-style:none;margin:0;padding:0;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.ings li+li{border-top:1px solid var(--line)}
+.ing{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 12px;width:100%;text-align:left}
+.ing:hover{background:var(--accent-soft)}
+.ing .in{min-width:0;flex:1}.ing .in div{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ing .is{font-size:12px;color:var(--muted)}
+.ings .empty{padding:14px 12px;font-size:14px;color:var(--muted)}
+.ings .ringadd{width:100%;padding:12px;color:var(--accent);font-weight:600;text-align:left;border-top:1px solid var(--line)}
+.ings li:first-child .ringadd{border-top:0}
 .newprod{color:var(--accent);font-weight:600;padding:12px 4px;text-align:left}
 
 /* etykieta wartości odżywczej */
@@ -213,7 +224,7 @@ const BASE=[
 ["Schab wieprzowy (surowy)",143,21,0,6.5],["Mięso mielone wieprzowe",250,17,0,20],["Wołowina mielona 5%",137,21,0,5],
 ["Szynka gotowana",110,18,1.5,3.5],["Kiełbasa śląska",280,13,1,25],["Parówki",250,12,2,22],
 ["Łosoś",208,20,0,13],["Dorsz",82,18,0,0.7],["Tuńczyk w sosie własnym",100,23,0,1],
-["Jajko (1 szt. ≈ 60 g)",143,12.6,0.7,9.5],["Mleko 2%",50,3.3,4.8,2],["Kefir 2%",51,3.4,4.7,2],
+["Jajko (1 szt. ≈ 60 g)",143,12.6,0.7,9.5],["Mleko 2%",50,3.3,4.8,2,"ml"],["Kefir 2%",51,3.4,4.7,2,"ml"],
 ["Jogurt naturalny 2%",60,4.3,6,2],["Skyr naturalny",64,11,4,0.2],["Twaróg półtłusty",133,18.7,3.7,4.7],
 ["Serek wiejski",100,11,2,5],["Ser żółty gouda",356,25,2.2,27],["Mozzarella",254,18,2,19],
 ["Masło",735,0.7,0.7,82.5],["Oliwa z oliwek",884,0,0,100],["Olej rzepakowy",884,0,0,100],
@@ -230,8 +241,9 @@ const BASE=[
 ["Hummus",166,7.9,14,9.6],["Masło orzechowe",588,25,20,50],["Orzechy włoskie",654,15,14,65],["Migdały",579,21,22,50],
 ["Miód",304,0.3,82,0],["Cukier",400,0,100,0],["Czekolada mleczna",535,7.6,59,30],["Czekolada gorzka 70%",598,7.8,46,43],
 ["Ketchup",110,1.2,25,0.2],["Majonez",700,1,1.5,76],["Odżywka białkowa WPC",390,75,8,6],
-["Sok pomarańczowy",45,0.7,10.4,0.2],["Coca-Cola",42,0,10.6,0],["Piwo jasne",43,0.5,3.6,0]
-].map((r,i)=>({id:"f"+i,n:r[0],k:r[1],b:r[2],w:r[3],t:r[4]}));
+["Sok pomarańczowy",45,0.7,10.4,0.2,"ml"],["Coca-Cola",42,0,10.6,0,"ml"],["Piwo jasne",43,0.5,3.6,0,"ml"],["Mleko 3,2%",61,3.2,4.7,3.2,"ml"],["Napój owsiany",45,1,6.5,1.5,"ml"]
+].map((r,i)=>({id:"f"+i,n:r[0],k:r[1],b:r[2],w:r[3],t:r[4],u:r[5]||"g"}));
+const U=p=>p&&p.u==="ml"?"ml":"g";
 
 const KEY="iwonka-liczy.v1";
 const dkey=d=>d.toLocaleDateString("sv-SE");
@@ -312,7 +324,7 @@ function render(){
     h+=`<section class="meal"><div class="mealhead"><div class="mealname">${mn}</div>
       <div class="mealsum num">${list.length?`<b>${r0(ms.k)} kcal</b><br>B ${r1(ms.b)} · W ${r1(ms.w)} · T ${r1(ms.t)}`:""}</div></div>
       ${list.length?"":""}<ul class="entries">${list.map(e=>{const c=calc(e);return`<li><button class="entry" data-act="edit" data-meal="${mk}" data-id="${e.id}">
-        <div class="nm"><div>${esc(e.n)}</div><div class="mx num">${r1(e.g)} g · <span class="dot b"></span>${r1(c.b)} <span class="dot w"></span>${r1(c.w)} <span class="dot t"></span>${r1(c.t)}</div></div>
+        <div class="nm"><div>${esc(e.n)}</div><div class="mx num">${r1(e.g)} ${U(e)}${e.pw?` (${r1(e.g/e.pw)} porc.)`:""} · <span class="dot b"></span>${r1(c.b)} <span class="dot w"></span>${r1(c.w)} <span class="dot t"></span>${r1(c.t)}</div></div>
         <div class="kc num">${r0(c.k)} kcal</div></button></li>`}).join("")}</ul>
       <button class="addbtn" data-act="add" data-meal="${mk}"><span>+</span> Dodaj produkt</button></section>`;
   }
@@ -325,29 +337,32 @@ let ctx={};
 function openSheet(html,focus){sheet.innerHTML=`<div class="grab"></div>`+html;sheet.hidden=false;scrim.hidden=false;
   if(focus){const el=document.getElementById(focus);if(el){el.focus();el.select&&el.select()}}}
 function closeSheet(){sheet.hidden=true;scrim.hidden=true;ctx={}}
+let rd=null,rdArm=false; // szkic przepisu w trakcie edycji
+function back(){if(rd&&ctx.mode!=="recipe")showRecipe();else{rd=null;closeSheet()}}
 const head=t=>`<div class="sheethead"><h2>${t}</h2><button class="iconbtn" data-act="close" aria-label="Zamknij">×</button></div>`;
 const mealName=k=>MEALS.find(m=>m[0]===k)[1];
 const products=()=>[...state.custom.map(p=>({...p,own:true})),...BASE];
 
 function showSearch(meal){
   ctx={mode:"search",meal};
-  openSheet(head(`Dodaj do: ${mealName(meal)}`)+`<div class="sheetbody">
+  openSheet(head(meal?`Dodaj do: ${mealName(meal)}`:"Dodaj składnik")+`<div class="sheetbody">
     <div class="scanbox"><button class="scanbtn" data-act="scan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2M7 8v8M10 8v8M13 8v8M17 8v8"/></svg>Zeskanuj kod kreskowy</button></div>
     <p class="scanmsg" id="scanmsg" hidden></p>
     <input type="search" id="q" placeholder="Szukaj: nazwa produktu albo numer kodu" autocomplete="off">
     <ul class="results" id="results"></ul>
-    <button class="newprod" data-act="newprod">+ Nowy produkt (wpisz wartości z etykiety)</button></div>`,"q");
+    <div class="addrow"><button class="newprod" data-act="newprod">+ Nowy produkt</button>${meal?`<button class="newprod" data-act="newrecipe">+ Nowy przepis</button>`:""}</div></div>`,"q");
   fillResults("");
 }
 function fillResults(q){
-  const all=products(),nq=norm(q.trim());
-  const row=p=>`<li><button class="res" data-act="pick" data-pid="${p.id}"><div class="rn">${esc(p.n)}${p.own?'<span class="tag">Twój</span>':""}
-    <div class="rs num">${p.ean?`<span class="code">${p.ean}</span> · `:""}B ${r1(p.b)} · W ${r1(p.w)} · T ${r1(p.t)} na 100 g</div></div><div class="rk num">${r0(p.k)} kcal</div></button></li>`;
+  const all=products().filter(p=>!(rd&&p.id===rd.id)),nq=norm(q.trim());
+  const row=p=>`<li><button class="res" data-act="pick" data-pid="${p.id}"><div class="rn">${esc(p.n)}${p.rec?'<span class="tag">Przepis</span>':p.own?'<span class="tag">Twój</span>':""}
+    <div class="rs num">${p.rec?`1 porcja = ${r0(p.pw)} g · ${r0(p.k*p.pw/100)} kcal`:`${p.ean?`<span class="code">${p.ean}</span> · `:""}B ${r1(p.b)} · W ${r1(p.w)} · T ${r1(p.t)} na 100 ${U(p)}`}</div></div><div class="rk num">${r0(p.k)} kcal<br><small>/100 ${U(p)}</small></div></button></li>`;
   let h="";
   if(!nq){
     const rec=state.recent.map(id=>all.find(p=>p.id===id)).filter(Boolean).slice(0,8);
     if(rec.length)h+=`<h3>Ostatnio dodawane</h3>`+rec.map(row).join("");
-    h+=`<h3>Wszystkie produkty</h3>`+[...all].sort((a,b)=>a.n.localeCompare(b.n,"pl")).map(row).join("");
+    const recs=all.filter(p=>p.rec);if(recs.length)h+=`<h3>Twoje przepisy</h3>`+recs.sort((a,b)=>a.n.localeCompare(b.n,"pl")).map(row).join("");
+    h+=`<h3>Wszystkie produkty</h3>`+all.filter(p=>!p.rec).sort((a,b)=>a.n.localeCompare(b.n,"pl")).map(row).join("");
   }else{
     const m=all.filter(p=>norm(p.n).includes(nq)||(p.ean&&p.ean.includes(nq)));
     h=m.length?m.map(row).join(""):`<li class="hint" style="padding:10px 4px">Nie ma „${esc(q)}” na liście.</li>`;
@@ -358,20 +373,28 @@ function fillResults(q){
 }
 
 function showAmount(p,meal,entry,note){
-  ctx={mode:"amount",p,meal,entry};
-  const g=entry?entry.g:(/Jajko/.test(p.n)?60:100);
+  const forRecipe=!!rd&&!meal;
+  ctx={mode:"amount",p,meal,entry,forRecipe};
+  const u=U(p),pw=p.rec?p.pw:0;
+  const g=entry?entry.g:pw?r0(pw):(/Jajko/.test(p.n)?60:u==="ml"?250:100);
+  const chips=pw?[[.5,"½ porcji"],[1,"1 porcja"],[1.5,"1½ porcji"],[2,"2 porcje"]].map(([x,l])=>`<button class="chip" data-act="chip" data-g="${Math.round(pw*x)}">${l}</button>`).join("")
+    :(u==="ml"?[100,200,250,330,500]:[50,100,150,200,250]).map(v=>`<button class="chip" data-act="chip" data-g="${v}">${v} ${u}</button>`).join("");
+  const btn=entry?"Zapisz zmiany":forRecipe?"Dodaj do przepisu":`Dodaj do: ${mealName(meal)}`;
+  const del=entry?`<button class="danger" data-act="delentry">${forRecipe?"Usuń z przepisu":"Usuń z posiłku"}</button>`:"";
+  const own=!forRecipe&&!entry&&p.rec&&state.custom.some(x=>x.id===p.id)?`<button class="newprod" data-act="redit" data-pid="${p.id}">Edytuj przepis</button>`:"";
   openSheet(head(esc(p.n))+`<div class="sheetbody">
-    <div class="gramrow"><input type="text" id="grams" inputmode="decimal" value="${g}" aria-label="Ilość w gramach"><span class="unit">g</span></div>
-    <div class="chips">${[50,100,150,200,250].map(v=>`<button class="chip" data-act="chip" data-g="${v}">${v} g</button>`).join("")}</div>
+    <div class="gramrow"><input type="text" id="grams" inputmode="decimal" value="${String(g).replace(".",",")}" aria-label="Ilość w ${u==="ml"?"mililitrach":"gramach"}"><span class="unit">${u}</span></div>
+    <div class="chips">${chips}</div>
     <div class="label" id="lbl"></div>${note?`<p class="src">${note}</p>`:""}
-    <button class="primary" id="save" data-act="saveentry">${entry?"Zapisz zmiany":`Dodaj do: ${mealName(meal)}`}</button>
-    ${entry?`<button class="danger" data-act="delentry">Usuń z posiłku</button>`:""}</div>`,"grams");
+    ${pw?`<p class="src">1 porcja = ${r0(pw)} g</p>`:""}
+    <button class="primary" id="save" data-act="saveentry">${btn}</button>${del}${own}</div>`,"grams");
   updLabel();
 }
 function updLabel(){
-  const p=ctx.p,g=num(document.getElementById("grams").value),ok=g>0;
+  const p=ctx.p,u=U(p),g=num(document.getElementById("grams").value),ok=g>0;
   const f=v=>ok?r1(v*g/100):"–";
-  document.getElementById("lbl").innerHTML=`<div class="lh">Wartość odżywcza<span>100 g · porcja</span></div>
+  const portion=ok&&p.rec&&p.pw?`${r1(g/p.pw)} porc.`:ok?`${r1(g)} ${u}`:"porcja";
+  document.getElementById("lbl").innerHTML=`<div class="lh">Wartość odżywcza<span>100 ${u} · ${portion}</span></div>
     <table class="num"><tr class="first"><td>Energia</td><td>${r0(p.k)} kcal</td><td>${ok?r0(p.k*g/100):"–"} kcal</td></tr>
     <tr><td><span class="dot b"></span>Białko</td><td>${r1(p.b)} g</td><td>${f(p.b)} g</td></tr>
     <tr><td><span class="dot w"></span>Węglowodany</td><td>${r1(p.w)} g</td><td>${f(p.w)} g</td></tr>
@@ -379,15 +402,64 @@ function updLabel(){
   document.getElementById("save").disabled=!ok;
 }
 
+/* ---- przepisy ---- */
+function recipeTotals(r){
+  const t=r.ing.reduce((a,i)=>{a.g+=i.g;a.k+=i.k*i.g/100;a.b+=i.b*i.g/100;a.w+=i.w*i.g/100;a.t+=i.t*i.g/100;return a},{g:0,k:0,b:0,w:0,t:0});
+  const tw=r.tw>0?r.tw:t.g,por=r.por>0?r.por:1;return{...t,tw,por,pw:tw/por};
+}
+function newRecipe(){rd={id:null,n:"",ing:[],por:"",tw:""};rdArm=false;showRecipe("r-name")}
+function editRecipe(p){rd={id:p.id,n:p.n,ing:JSON.parse(JSON.stringify(p.ing||[])),por:p.por||"",tw:p.twManual?p.tw:""};rdArm=false;showRecipe()}
+function readRecipe(){
+  const el=id=>document.getElementById(id);if(!el("r-name"))return;
+  rd.n=el("r-name").value.trim();rd.por=num(el("r-por").value)||"";rd.tw=num(el("r-tw").value)||"";
+}
+function showRecipe(focus){
+  ctx={mode:"recipe"};
+  const t=recipeTotals(rd);
+  openSheet(head(rd.id?"Edytuj przepis":"Nowy przepis")+`<div class="sheetbody">
+    <div class="field"><label for="r-name">Nazwa przepisu</label><input type="text" id="r-name" value="${esc(rd.n)}" placeholder="np. Pizza domowa"></div>
+    <div class="sec">Składniki</div>
+    <ul class="ings">${rd.ing.map((i,ix)=>`<li><button class="ing" data-act="ringedit" data-i="${ix}"><div class="in"><div>${esc(i.n)}</div><div class="is num">${r1(i.g)} ${U(i)}</div></div><div class="num" style="font-weight:600">${r0(i.k*i.g/100)} kcal</div></button></li>`).join("")||`<li class="empty">Dodaj składniki: mąka, ser, sos… Skanowanie kodów też działa.</li>`}
+      <li><button class="ringadd" data-act="ringadd">+ Dodaj składnik</button></li></ul>
+    <div class="grid4">
+      <div class="field"><label for="r-por">Ile porcji wychodzi</label><input type="text" id="r-por" inputmode="decimal" value="${rd.por}" placeholder="np. 4"></div>
+      <div class="field"><label for="r-tw">Waga gotowej potrawy (g)</label><input type="text" id="r-tw" inputmode="decimal" value="${rd.tw}" placeholder="${t.g?r0(t.g):"opcjonalnie"}"></div>
+    </div>
+    <p class="hint" style="margin:0">Waga gotowej potrawy jest opcjonalna. Bez niej liczę sumę składników. Przy pieczeniu i gotowaniu waga się zmienia (woda odparowuje, makaron nasiąka), więc jak zważysz gotowe danie, wynik będzie dokładniejszy.</p>
+    <div class="eer" id="r-sum"></div>
+    <button class="primary" data-act="rsave">Zapisz przepis</button>
+    <p class="hint" id="r-err" style="margin:0;color:var(--warn)"></p>
+    ${rd.id?`<button class="danger" data-act="rdel">Usuń przepis</button>`:""}</div>`,focus);
+  updRecipeSum();
+}
+function updRecipeSum(){
+  readRecipe();const t=recipeTotals(rd),box=document.getElementById("r-sum");
+  if(!rd.ing.length){box.innerHTML=`<div class="sub">Tu pojawią się kalorie całej potrawy i jednej porcji.</div>`;return}
+  const pp=v=>r1(v/t.por);
+  box.innerHTML=`<div class="sub num">Cała potrawa: ${r0(t.k)} kcal · ${r0(t.tw)} g</div>
+    <div class="big num">${r0(t.k/t.por)} kcal / porcja</div>
+    <div class="sub num">porcja ${r0(t.pw)} g · białko ${pp(t.b)} g · węgle ${pp(t.w)} g · tłuszcz ${pp(t.t)} g</div>`;
+}
+function saveRecipe(){
+  readRecipe();const err=document.getElementById("r-err");
+  if(!rd.n){err.textContent="Wpisz nazwę przepisu.";return}
+  if(!rd.ing.length){err.textContent="Dodaj przynajmniej jeden składnik.";return}
+  const t=recipeTotals(rd),per=v=>Math.round(v/t.tw*1000)/10;
+  const p={id:rd.id||"r"+uid(),n:rd.n,rec:true,u:"g",ing:rd.ing,por:t.por,tw:t.tw,twManual:rd.tw>0,pw:t.pw,k:Math.round(t.k/t.tw*100),b:per(t.b),w:per(t.w),t:per(t.t)};
+  const ix=state.custom.findIndex(x=>x.id===p.id);if(ix>=0)state.custom[ix]=p;else state.custom.push(p);
+  save();rd=null;closeSheet();render();
+}
+
 function showNewProduct(meal,ean,name,why){
   let q=name||(document.getElementById("q")||{}).value||"";
   if(/^\d{6,}$/.test(q.trim())){ean=ean||q.trim();q=""}
-  ctx={mode:"new",meal,ean};
+  ctx={mode:"new",meal,ean,u:"g"};
   const fl=(id,lab,ph,v="")=>`<div class="field"><label for="${id}">${lab}</label><input type="text" id="${id}" inputmode="decimal" placeholder="${ph}" value="${esc(v)}"></div>`;
   openSheet(head("Nowy produkt")+`<div class="sheetbody">
     ${ean?`<p class="hint" style="margin:0">${why||"Tego kodu nie ma w bazie produktów."} Kod: <b class="code">${esc(ean)}</b>. Przepisz raz dane z etykiety, a przy następnym skanie produkt wskoczy sam.</p>`:""}
     <div class="field"><label for="c-name">Nazwa</label><input type="text" id="c-name" value="${esc(q)}" placeholder="np. Baton proteinowy XYZ"></div>
-    <p class="hint" style="margin:0">Wpisz wartości z etykiety <b>na 100 g</b>. Kalorie możesz zostawić puste — policzę je z makro.</p>
+    <div class="field"><label>Na etykiecie wartości są podane</label><div class="seg" id="c-unit"><button data-act="cunit" data-v="g" aria-pressed="true">na 100 g</button><button data-act="cunit" data-v="ml" aria-pressed="false">na 100 ml</button></div></div>
+    <p class="hint" style="margin:0">Przepisz wartości z etykiety <b id="c-per">na 100 g</b>. Kalorie możesz zostawić puste, policzę je z makro. Napoje, mleko, jogurty pitne zwykle są na 100 ml.</p>
     <div class="grid4">${fl("c-k","Kalorie (kcal)","np. 350")}${fl("c-b","Białko (g)","0")}${fl("c-w","Węglowodany (g)","0")}${fl("c-t","Tłuszcz (g)","0")}</div>
     <button class="primary" data-act="savenew">Zapisz produkt i dalej</button>
     <p class="hint" id="c-err" style="margin:0;color:var(--warn)"></p></div>`,q?"c-k":"c-name");
@@ -454,22 +526,33 @@ function updEER(init){
 function addRecent(id){state.recent=[id,...state.recent.filter(x=>x!==id)].slice(0,20)}
 
 document.addEventListener("click",ev=>{
-  const b=ev.target.closest("[data-act]");if(!b){if(ev.target===scrim&&state.profiles.length)closeSheet();return}
+  const b=ev.target.closest("[data-act]");if(!b){if(ev.target===scrim&&state.profiles.length)back();return}
   const a=b.dataset.act;
   if(a==="prev"||a==="next"){cur=new Date(cur);cur.setDate(cur.getDate()+(a==="prev"?-1:1));render()}
-  else if(a==="close")closeSheet();
+  else if(a==="close")back();
   else if(a==="add")showSearch(b.dataset.meal);
   else if(a==="newprod")showNewProduct(ctx.meal);
   else if(a==="pick"){const p=products().find(x=>x.id===b.dataset.pid);if(p)showAmount(p,ctx.meal)}
+  else if(a==="newrecipe")newRecipe();
+  else if(a==="redit"){const p=state.custom.find(x=>x.id===b.dataset.pid);if(p)editRecipe(p)}
+  else if(a==="ringadd"){readRecipe();showSearch(null)}
+  else if(a==="ringedit"){readRecipe();const i=rd.ing[+b.dataset.i];if(i)showAmount(i,null,i)}
+  else if(a==="rsave")saveRecipe();
+  else if(a==="rdel"){if(!rdArm){rdArm=true;b.textContent="Na pewno? Kliknij jeszcze raz";return}
+    state.custom=state.custom.filter(x=>x.id!==rd.id);state.recent=state.recent.filter(x=>x!==rd.id);save();rd=null;closeSheet();render()}
+  else if(a==="cunit"){ctx.u=b.dataset.v;b.parentElement.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",x===b));
+    document.getElementById("c-per").textContent="na 100 "+ctx.u}
   else if(a==="chip"){document.getElementById("grams").value=b.dataset.g;updLabel()}
-  else if(a==="edit"){const e=(day()[b.dataset.meal]||[]).find(x=>x.id===b.dataset.id);if(e)showAmount({n:e.n,k:e.k,b:e.b,w:e.w,t:e.t},b.dataset.meal,e)}
+  else if(a==="edit"){const e=(day()[b.dataset.meal]||[]).find(x=>x.id===b.dataset.id);if(e)showAmount({n:e.n,k:e.k,b:e.b,w:e.w,t:e.t,u:e.u,rec:!!e.pw,pw:e.pw},b.dataset.meal,e)}
   else if(a==="saveentry"){
     const g=num(document.getElementById("grams").value);if(!(g>0))return;
-    const{p,meal,entry}=ctx;
+    const{p,meal,entry,forRecipe}=ctx;
+    if(forRecipe){if(entry)entry.g=g;else rd.ing.push({n:p.n,g,k:p.k,b:p.b,w:p.w,t:p.t,u:U(p)});if(!entry&&p.id)addRecent(p.id);save();showRecipe();return}
     if(entry)entry.g=g;
-    else{const d=day();(d[meal]||(d[meal]=[])).push({id:uid(),n:p.n,g,k:p.k,b:p.b,w:p.w,t:p.t});if(p.id)addRecent(p.id)}
+    else{const d=day(),en={id:uid(),n:p.n,g,k:p.k,b:p.b,w:p.w,t:p.t,u:U(p)};if(p.rec)en.pw=p.pw;(d[meal]||(d[meal]=[])).push(en);if(p.id)addRecent(p.id)}
     save();closeSheet();render();
   }
+  else if(a==="delentry"&&ctx.forRecipe){rd.ing=rd.ing.filter(x=>x!==ctx.entry);showRecipe()}
   else if(a==="delentry"){const d=day();d[ctx.meal]=(d[ctx.meal]||[]).filter(x=>x!==ctx.entry);save();closeSheet();render()}
   else if(a==="savenew"){
     const v=id=>num(document.getElementById(id).value);
@@ -479,7 +562,7 @@ document.addEventListener("click",ev=>{
     const err=document.getElementById("c-err");
     if(!n){err.textContent="Wpisz nazwę produktu.";return}
     if(!(k>0)){err.textContent="Podaj kalorie albo chociaż białko, węgle lub tłuszcz.";return}
-    const p={id:"c"+uid(),n,k,b:pb,w:pw,t:pt};if(ctx.ean)p.ean=ctx.ean;state.custom.push(p);save();showAmount(p,ctx.meal);
+    const p={id:"c"+uid(),n,k,b:pb,w:pw,t:pt,u:ctx.u||"g"};if(ctx.ean)p.ean=ctx.ean;state.custom.push(p);save();showAmount(p,ctx.meal);
   }
   else if(a==="profiles")showProfiles();
   else if(a==="switchp"){state.cur=b.dataset.pid;save();closeSheet();render()}
@@ -583,7 +666,7 @@ const n1=v=>{const x=parseFloat(v);return isFinite(x)?Math.round(x*10)/10:null};
 async function fetchOFF(code){
   const ctl=new AbortController();const to=setTimeout(()=>ctl.abort(),9000);
   try{
-    const r=await fetch(`https://world.openfoodfacts.org/api/v2/product/${code}.json?fields=product_name,product_name_pl,generic_name_pl,brands,nutriments&lc=pl`,{signal:ctl.signal});
+    const r=await fetch(`https://world.openfoodfacts.org/api/v2/product/${code}.json?fields=product_name,product_name_pl,generic_name_pl,brands,quantity,nutrition_data_per,nutriments&lc=pl`,{signal:ctl.signal});
     if(r.status===404)return{found:false};
     if(!r.ok)throw new Error("http");
     const j=await r.json();if(j.status!==1||!j.product)return{found:false};
@@ -594,7 +677,8 @@ async function fetchOFF(code){
     let k=n1(nu["energy-kcal_100g"]);if(k==null&&nu["energy-kj_100g"]!=null)k=Math.round(nu["energy-kj_100g"]/4.184);
     if(k==null&&nu["energy_100g"]!=null)k=Math.round(nu["energy_100g"]/4.184);
     const b=n1(nu.proteins_100g),w=n1(nu.carbohydrates_100g),t=n1(nu.fat_100g);
-    return{found:true,name,k,b,w,t,complete:k!=null&&b!=null&&w!=null&&t!=null}
+    const u=/\d\s*(ml|cl|l)\b/i.test(p.quantity||"")?"ml":"g";
+    return{found:true,name,k,b,w,t,u,complete:k!=null&&b!=null&&w!=null&&t!=null}
   }finally{clearTimeout(to)}
 }
 async function handleCode(code){
@@ -608,9 +692,10 @@ async function handleCode(code){
   if(ctx.mode!=="lookup")return;
   if(!res.found){showNewProduct(meal,code,"","Tego kodu nie ma w bazie produktów.");return}
   if(!res.complete){showNewProduct(meal,code,res.name,"Baza zna ten produkt, ale bez pełnych wartości odżywczych.");
+    if(res.u==="ml"){const mb=document.querySelector('#c-unit [data-v="ml"]');if(mb)mb.click()}
     const set=(id,v)=>{if(v!=null)document.getElementById(id).value=String(v).replace(".",",")};
     set("c-k",res.k);set("c-b",res.b);set("c-w",res.w);set("c-t",res.t);return}
-  const p={id:"c"+uid(),n:res.name||("Produkt "+code),k:res.k,b:res.b,w:res.w,t:res.t,ean:code,src:"off"};
+  const p={id:"c"+uid(),n:res.name||("Produkt "+code),k:res.k,b:res.b,w:res.w,t:res.t,u:res.u,ean:code,src:"off"};
   state.custom.push(p);save();
   showAmount(p,meal,null,"Dane z bazy Open Food Facts. Warto raz porównać z etykietą.");
 }
@@ -624,6 +709,7 @@ document.addEventListener("change",ev=>{
   }
 });
 document.addEventListener("input",ev=>{
+  if(ctx.mode==="recipe"&&["r-por","r-tw"].includes(ev.target.id))updRecipeSum();
   if(ev.target.id==="p-kcal"&&draft)draft.kcalManual=!!ev.target.value;
   if(ctx.mode==="profile"&&["p-dob","p-weight","p-height","p-hours","p-act","p-name","p-other"].includes(ev.target.id)){
     if(ev.target.id==="p-hours"){const h=num(ev.target.value);if(h>=0)document.getElementById("p-act").value=suggestAct(h)}
@@ -632,7 +718,7 @@ document.addEventListener("input",ev=>{
   if(ev.target.id==="grams")updLabel();
 });
 document.addEventListener("keydown",ev=>{
-  if(ev.key==="Escape"){if(scanning)stopScan();else if(!sheet.hidden&&state.profiles.length)closeSheet()}
+  if(ev.key==="Escape"){if(scanning)stopScan();else if(!sheet.hidden&&state.profiles.length)back()}
   if(ev.key==="Enter"&&ev.target.id==="q"){const dq=ev.target.value.trim().replace(/\s/g,"");if(/^\d{8,14}$/.test(dq))handleCode(dq)}
   if(ev.key==="Enter"&&ev.target.id==="grams")document.getElementById("save").click();
 });
