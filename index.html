@@ -377,6 +377,9 @@ function fillResults(q){
   document.getElementById("results").innerHTML=h;
 }
 
+function findOwn(p,entry){
+  const id=(entry&&entry.pid)||p.id;let m=id&&state.custom.find(x=>x.id===id);
+  if(!m&&entry)m=state.custom.find(x=>!x.rec&&x.n===entry.n&&x.k===entry.k);return m||null}
 function showAmount(p,meal,entry,note){
   const forRecipe=!!rd&&!meal;
   ctx={mode:"amount",p,meal,entry,forRecipe};
@@ -387,7 +390,9 @@ function showAmount(p,meal,entry,note){
   const btn=entry?"Zapisz zmiany":forRecipe?"Dodaj i wybierz następny składnik":`Dodaj do: ${mealName(meal)}`;
   const btn2=forRecipe&&!entry?`<button class="danger" style="color:var(--accent)" data-act="saveentry" data-done="1">Dodaj i wróć do przepisu</button>`:"";
   const del=entry?`<button class="danger" data-act="delentry">${forRecipe?"Usuń z przepisu":"Usuń z posiłku"}</button>`:"";
-  const own=!forRecipe&&!entry&&p.rec&&state.custom.some(x=>x.id===p.id)?`<button class="newprod" data-act="redit" data-pid="${p.id}">Edytuj przepis</button>`:"";
+  const mine=forRecipe?null:findOwn(p,entry);
+  const own=!mine?"":mine.rec?(!entry?`<button class="newprod" data-act="redit" data-pid="${mine.id}">Edytuj przepis</button>`:"")
+    :`<button class="newprod" data-act="pedit" data-pid="${mine.id}">Zmień nazwę lub wartości produktu</button>`;
   openSheet(head(esc(p.n))+`<div class="sheetbody">
     <div class="gramrow"><input type="text" id="grams" inputmode="decimal" value="${String(g).replace(".",",")}" aria-label="Ilość w ${u==="ml"?"mililitrach":"gramach"}"><span class="unit">${u}</span></div>
     <div class="chips">${chips}</div>
@@ -456,19 +461,33 @@ function saveRecipe(){
   save();rd=null;closeSheet();render();
 }
 
-function showNewProduct(meal,ean,name,why){
-  let q=name||(document.getElementById("q")||{}).value||"";
-  if(/^\d{6,}$/.test(q.trim())){ean=ean||q.trim();q=""}
-  ctx={mode:"new",meal,ean,u:"g"};
-  const fl=(id,lab,ph,v="")=>`<div class="field"><label for="${id}">${lab}</label><input type="text" id="${id}" inputmode="decimal" placeholder="${ph}" value="${esc(v)}"></div>`;
-  openSheet(head("Nowy produkt")+`<div class="sheetbody">
-    ${ean?`<p class="hint" style="margin:0">${why||"Tego kodu nie ma w bazie produktów."} Kod: <b class="code">${esc(ean)}</b>. Przepisz raz dane z etykiety, a przy następnym skanie produkt wskoczy sam.</p>`:""}
-    <div class="field"><label for="c-name">Nazwa</label><input type="text" id="c-name" value="${esc(q)}" placeholder="np. Baton proteinowy XYZ"></div>
-    <div class="field"><label>Na etykiecie wartości są podane</label><div class="seg" id="c-unit"><button data-act="cunit" data-v="g" aria-pressed="true">na 100 g</button><button data-act="cunit" data-v="ml" aria-pressed="false">na 100 ml</button></div></div>
-    <p class="hint" style="margin:0">Przepisz wartości z etykiety <b id="c-per">na 100 g</b>. Kalorie możesz zostawić puste, policzę je z makro. Napoje, mleko, jogurty pitne zwykle są na 100 ml.</p>
-    <div class="grid4">${fl("c-k","Kalorie (kcal)","np. 350")}${fl("c-b","Białko (g)","0")}${fl("c-w","Węglowodany (g)","0")}${fl("c-t","Tłuszcz (g)","0")}</div>
-    <button class="primary" data-act="savenew">Zapisz produkt i dalej</button>
-    <p class="hint" id="c-err" style="margin:0;color:var(--warn)"></p></div>`,q?"c-k":"c-name");
+let pdelArm=false;
+function showNewProduct(meal,ean,name,why,edit,vals){
+  let q=edit?edit.n:(name!=null&&name!==""?name:(document.getElementById("q")||{}).value||"");
+  if(!edit&&/^\d{6,}$/.test(q.trim())){ean=ean||q.trim();q=""}
+  if(edit)ean=edit.ean||"";
+  const v=edit||vals||{},u=v.u==="ml"?"ml":"g";
+  ctx={mode:"new",meal,ean,u,edit:edit||null,entry:ctx&&ctx.entry||null};pdelArm=false;
+  const nv=x=>x==null||x===""?"":String(x).replace(".",",");
+  const fl=(id,lab,ph,val)=>`<div class="field"><label for="${id}">${lab}</label><input type="text" id="${id}" inputmode="decimal" placeholder="${ph}" value="${esc(nv(val))}"></div>`;
+  const info=edit?(ean?`<p class="hint" style="margin:0">Kod kreskowy: <b class="code">${esc(ean)}</b>. Po zmianie nazwy skan dalej rozpozna ten produkt.</p>`:"")
+    :ean?`<p class="hint" style="margin:0">${why||"Tego kodu nie ma w bazie produktów."} Kod: <b class="code">${esc(ean)}</b>. Zapisz go raz, a przy następnym skanie produkt wskoczy sam.</p>`:"";
+  openSheet(head(edit?"Edytuj produkt":"Nowy produkt")+`<div class="sheetbody">
+    ${info}
+    <div class="field"><label for="c-name">Twoja nazwa produktu</label><input type="text" id="c-name" value="${esc(q)}" placeholder="np. Sernik z Lidla"></div>
+    <div class="field"><label>Na etykiecie wartości są podane</label><div class="seg" id="c-unit"><button data-act="cunit" data-v="g" aria-pressed="${u==="g"}">na 100 g</button><button data-act="cunit" data-v="ml" aria-pressed="${u==="ml"}">na 100 ml</button></div></div>
+    <p class="hint" style="margin:0">Wartości z etykiety <b id="c-per">na 100 ${u}</b>. Kalorie możesz zostawić puste, policzę je z makro. Napoje, mleko, jogurty pitne zwykle są na 100 ml.</p>
+    <div class="grid4">${fl("c-k","Kalorie (kcal)","np. 350",v.k)}${fl("c-b","Białko (g)","0",v.b)}${fl("c-w","Węglowodany (g)","0",v.w)}${fl("c-t","Tłuszcz (g)","0",v.t)}</div>
+    <button class="primary" data-act="savenew">${edit?"Zapisz zmiany":"Zapisz produkt i dalej"}</button>
+    <p class="hint" id="c-err" style="margin:0;color:var(--warn)"></p>
+    ${edit?`<p class="hint" style="margin:0">Zmiana nazwy i wartości poprawi też wcześniejsze wpisy z tym produktem.</p><button class="danger" data-act="pdel">Usuń produkt z listy</button>`:""}</div>`,
+    edit||!q?"c-name":"c-k");
+}
+function syncEntries(old,p){
+  let n=0;
+  for(const pr of state.profiles)for(const d of Object.values(pr.days||{}))for(const list of Object.values(d))for(const e of list){
+    if(e.pid===p.id||(!e.pid&&!e.pw&&e.n===old.n&&e.k===old.k)){e.pid=p.id;e.n=p.n;e.k=p.k;e.b=p.b;e.w=p.w;e.t=p.t;e.u=p.u;n++}
+  }return n;
 }
 
 let draft=null,delArm=false;
@@ -540,6 +559,9 @@ document.addEventListener("click",ev=>{
   else if(a==="newprod")showNewProduct(ctx.meal);
   else if(a==="pick"){const p=products().find(x=>x.id===b.dataset.pid);if(p)showAmount(p,ctx.meal)}
   else if(a==="newrecipe")newRecipe();
+  else if(a==="pedit"){const p=state.custom.find(x=>x.id===b.dataset.pid);if(p)showNewProduct(ctx.meal,null,null,null,p)}
+  else if(a==="pdel"){if(!pdelArm){pdelArm=true;b.textContent="Na pewno? Kliknij jeszcze raz (wpisy w posiłkach zostaną)";return}
+    const id=ctx.edit.id;state.custom=state.custom.filter(x=>x.id!==id);state.recent=state.recent.filter(x=>x!==id);save();closeSheet();render()}
   else if(a==="redit"){const p=state.custom.find(x=>x.id===b.dataset.pid);if(p)editRecipe(p)}
   else if(a==="ringadd"){readRecipe();showSearch(null)}
   else if(a==="rback")showRecipe();
@@ -550,14 +572,14 @@ document.addEventListener("click",ev=>{
   else if(a==="cunit"){ctx.u=b.dataset.v;b.parentElement.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",x===b));
     document.getElementById("c-per").textContent="na 100 "+ctx.u}
   else if(a==="chip"){document.getElementById("grams").value=b.dataset.g;updLabel()}
-  else if(a==="edit"){const e=(day()[b.dataset.meal]||[]).find(x=>x.id===b.dataset.id);if(e)showAmount({n:e.n,k:e.k,b:e.b,w:e.w,t:e.t,u:e.u,rec:!!e.pw,pw:e.pw},b.dataset.meal,e)}
+  else if(a==="edit"){const e=(day()[b.dataset.meal]||[]).find(x=>x.id===b.dataset.id);if(e)showAmount({id:e.pid,n:e.n,k:e.k,b:e.b,w:e.w,t:e.t,u:e.u,rec:!!e.pw,pw:e.pw},b.dataset.meal,e)}
   else if(a==="saveentry"){
     const g=num(document.getElementById("grams").value);if(!(g>0))return;
     const{p,meal,entry,forRecipe}=ctx;
     if(forRecipe){if(entry)entry.g=g;else rd.ing.push({n:p.n,g,k:p.k,b:p.b,w:p.w,t:p.t,u:U(p)});if(!entry&&p.id)addRecent(p.id);save();
       if(entry||b.dataset.done)showRecipe();else showSearch(null);return}
     if(entry)entry.g=g;
-    else{const d=day(),en={id:uid(),n:p.n,g,k:p.k,b:p.b,w:p.w,t:p.t,u:U(p)};if(p.rec)en.pw=p.pw;(d[meal]||(d[meal]=[])).push(en);if(p.id)addRecent(p.id)}
+    else{const d=day(),en={id:uid(),n:p.n,g,k:p.k,b:p.b,w:p.w,t:p.t,u:U(p)};if(p.rec)en.pw=p.pw;if(p.id&&state.custom.some(x=>x.id===p.id))en.pid=p.id;(d[meal]||(d[meal]=[])).push(en);if(p.id)addRecent(p.id)}
     save();closeSheet();render();
   }
   else if(a==="delentry"&&ctx.forRecipe){rd.ing=rd.ing.filter(x=>x!==ctx.entry);showRecipe()}
@@ -570,6 +592,10 @@ document.addEventListener("click",ev=>{
     const err=document.getElementById("c-err");
     if(!n){err.textContent="Wpisz nazwę produktu.";return}
     if(!(k>0)){err.textContent="Podaj kalorie albo chociaż białko, węgle lub tłuszcz.";return}
+    if(ctx.edit){
+      const old=ctx.edit,p={...old,n,k,b:pb,w:pw,t:pt,u:ctx.u||"g"};delete p.src;
+      state.custom[state.custom.indexOf(old)]=p;syncEntries(old,p);save();render();
+      if(ctx.meal&&!ctx.entry)showAmount(p,ctx.meal);else closeSheet();return}
     const p={id:"c"+uid(),n,k,b:pb,w:pw,t:pt,u:ctx.u||"g"};if(ctx.ean)p.ean=ctx.ean;state.custom.push(p);save();showAmount(p,ctx.meal);
   }
   else if(a==="profiles")showProfiles();
@@ -703,9 +729,7 @@ async function handleCode(code){
     if(res.u==="ml"){const mb=document.querySelector('#c-unit [data-v="ml"]');if(mb)mb.click()}
     const set=(id,v)=>{if(v!=null)document.getElementById(id).value=String(v).replace(".",",")};
     set("c-k",res.k);set("c-b",res.b);set("c-w",res.w);set("c-t",res.t);return}
-  const p={id:"c"+uid(),n:res.name||("Produkt "+code),k:res.k,b:res.b,w:res.w,t:res.t,u:res.u,ean:code,src:"off"};
-  state.custom.push(p);save();
-  showAmount(p,meal,null,"Dane z bazy Open Food Facts. Warto raz porównać z etykietą.");
+  showNewProduct(meal,code,res.name,res.name?"Znalazłem w bazie Open Food Facts. Możesz zmienić nazwę na swoją i sprawdzić liczby z etykietą.":"Baza ma wartości tego produktu, ale bez nazwy. Wpisz swoją.",null,res);
 }
 document.addEventListener("change",ev=>{
   if(ev.target.id==="p-act"||ev.target.id==="p-dob")updEER();
